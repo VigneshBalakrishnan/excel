@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { log } from 'util';
 
 import * as XLSX from 'xlsx';
 
@@ -10,9 +11,11 @@ type AOA = any[][];
 })
 
 export class SheetJSComponent {
-  data: AOA = [[1, 2], [3, 4]];
+  data: any = [];
   wopts: XLSX.WritingOptions = { bookType: 'xlsx', type: 'array' };
   fileName: string = 'SheetJS.xlsx';
+  columns: string[];
+  mockData: any;
 
   onFileChange(evt: any) {
     /* wire up file reader */
@@ -21,31 +24,31 @@ export class SheetJSComponent {
     const reader: FileReader = new FileReader();
     reader.onload = (e: any) => {
       /* read workbook */
-      const bstr: string = e.target.result;
-      const wb: XLSX.WorkBook = XLSX.read(bstr, { type: 'binary' });
-
-      /* grab first sheet */
-      const wsname: string = wb.SheetNames[0];
-      const ws: XLSX.WorkSheet = wb.Sheets[wsname];
+      const data = reader.result;
+      let ws = XLSX.read(data, { type: 'binary' });
 
       /* save data */
-      this.data = <AOA>(XLSX.utils.sheet_to_json(ws, { header: 1 }));
-      console.log(this.data);
+      // this.data = <AOA>(XLSX.utils.sheet_to_json(ws, { header: 1 }));
+      this.data = ws.SheetNames.reduce((initial, name) => {
+        const sheet = ws.Sheets[name];
+        initial[name] = XLSX.utils.sheet_to_json(sheet);
+        return initial;
+      }, {});
+      this.data = this.data['Sheet1'].filter((sheet: any)=> sheet['Creator Name']);
+      this.mockData = this.data;
+      this.columns = Object.keys(this.data[0]);
     };
     reader.readAsBinaryString(target.files[0]);
   }
 
-
-  export(): void {
-    /* generate worksheet */
-    const ws: XLSX.WorkSheet = XLSX.utils.aoa_to_sheet(this.data);
-
-    /* generate workbook and add the worksheet */
-    const wb: XLSX.WorkBook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
-
-    /* save to file */
-    XLSX.writeFile(wb, this.fileName);
+  filterData(event): any{
+    const myClonedArray = [];
+    this.data.forEach(val => myClonedArray.push(Object.assign({}, val)));
+    if(event.target.value){
+      this.data = myClonedArray.filter((dt: any)=> dt['Creator Name'].includes(event.target.value));
+    }else{
+      this.data = this.mockData
+    }
   }
 
 }

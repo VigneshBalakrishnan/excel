@@ -1,10 +1,21 @@
-<input type="file" (change)="onFileChange($event)" multiple="false" />
-	<table class="sjs-table">
-		<tbody>
-      <tr *ngFor="let row of data">
-			<td *ngFor="let val of row">
-				{{val}}
+<div>
+	<input type="file" (change)="onFileChange($event)" multiple="false" />
+</div>
+<div class="filterData">
+	<div>Filter By Name</div>
+	<input type="text" (keyup)="filterData($event)">
+</div>
+<table class="sjs-table">
+	<tbody>
+	  <tr>
+		<td *ngFor="let val of columns">
+			{{val}}
+		</td>
+	  </tr>
+      <tr *ngFor="let row of data;let i=index;">
+			<td *ngFor="let val of columns">
+				{{row[val]}}
 			</td>
 		</tr>
     </tbody>
-	</table>
+</table>
